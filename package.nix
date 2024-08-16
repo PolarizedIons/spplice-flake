@@ -1,4 +1,5 @@
-{ appimageTools, makeDesktopItem, fetchurl, copyDesktopItems, config, ... }:
+{ appimageTools, makeDesktopItem, fetchurl, copyDesktopItems, config, pkgs, ...
+}:
 
 let
   defaultVersion = import ./version.nix;

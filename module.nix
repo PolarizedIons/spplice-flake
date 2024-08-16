@@ -5,10 +5,10 @@
 with lib;
 
 let
-  cfg = config.programs.awsvpnclient;
+  cfg = config.programs.spplice;
   defaultVersion = import ./version.nix;
 in {
-  options.programs.awsvpnclient = {
+  options.programs.spplice = {
     enable = mkEnableOption "Enable Spplice";
     # Once it's open sourced, we can download previous versions.
     # version = mkOption {

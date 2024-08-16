@@ -15,7 +15,7 @@ let
 
   appimageContents = (appimageTools.extract { inherit pname version src; });
 in appimageTools.wrapType1 {
-  inherit pname version;
+  inherit pname version src;
 
   nativeBuildInputs = [ copyDesktopItems ];
   desktopItems = [

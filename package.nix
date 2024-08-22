@@ -1,46 +1,97 @@
-{ appimageTools, makeDesktopItem, fetchurl, copyDesktopItems, config, pkgs, ...
-}:
+{ buildFHSEnv, stdenv, autoPatchelfHook, makeDesktopItem, fetchurl
+, copyDesktopItems, config, pkgs, ... }:
 
 let
   defaultVersion = import ./version.nix;
   pname = "spplice";
   name = pname;
+  icon = ./icon.png;
 
-  cfg = config.programs.spplice or { };
-  version = cfg.version or defaultVersion.version;
-  url = cfg.url or defaultVersion.url;
-  hash = cfg.hash or defaultVersion.hash;
+  mkSrc = versionInfo: fetchurl { inherit (versionInfo) url hash; };
 
-  src = fetchurl { inherit url hash; };
+  mkSpplice = versionInfo:
+    stdenv.mkDerivation {
+      inherit pname;
+      inherit (versionInfo) version;
 
-  appimageContents = (appimageTools.extract { inherit pname version src; });
-in appimageTools.wrapType1 {
-  inherit pname version src;
+      src = mkSrc versionInfo;
 
-  nativeBuildInputs = [ copyDesktopItems ];
-  desktopItems = [
+      dontUnpack = true;
+
+      nativeBuildInputs = [ autoPatchelfHook copyDesktopItems ];
+
+      installPhase = ''
+        mkdir -p $out/bin/${pname}
+        cp $src $out/bin/${pname}/${pname}
+        chmod +x $out/bin/${pname}/${pname}
+
+        mkdir -p $out/usr/share/pixmaps
+        cp ${icon} $out/usr/share/pixmaps/${pname}.png
+      '';
+
+      meta = with pkgs.lib; {
+        homepage = "https://p2r3.com/spplice";
+        description = "A Portal 2 mod loader";
+        platforms = platforms.linux;
+      };
+    };
+
+  mkDesktopItem = spplice:
     (makeDesktopItem {
-      name = "Spplice2";
-      exec = "electron /opt/spplice/app.asar --disable-gpu-vsync $@";
-      icon = "spplice";
-      desktopName = "spplice";
-      categories = [ "Games" ];
-    })
-  ];
+      name = pname;
+      desktopName = "Spplice";
+      exec = "${spplice}/bin/${pname} %u";
+      icon = "${spplice}/usr/share/pixmaps/${pname}.png";
+      categories = [ "Game" ];
+    });
 
-  extraInstallCommands = ''
-    # Add desktop convencience stuff
-    install -Dm444 ${appimageContents}/spplice.desktop -t $out/share/applications
-    install -Dm444 ${appimageContents}/spplice.png -t $out/share/pixmaps
-    substituteInPlace $out/share/applications/spplice.desktop \
-      --replace 'Exec=AppRun' "Exec=$out/bin/${pname}"
-  '';
+  mkSppliceFHS = versionInfo:
+    let
+      spplice = mkSpplice versionInfo;
+      desktopItem = mkDesktopItem spplice;
+    in buildFHSEnv {
+      inherit pname;
+      inherit (versionInfo) version;
 
-  extraPkgs = pkgs: with pkgs; [ electron_30-bin ];
+      targetPkgs = _: [ spplice ];
 
-  meta = with pkgs.lib; {
-    homepage = "https://p2r3.com/spplice";
-    description = "A Portal 2 mod loader";
-    platforms = platforms.linux;
-  };
-}
+      runScript = "/bin/${pname}/${pname}";
+
+      multiPkgs = _:
+        with pkgs; [
+          curl
+          libarchive
+          libdrm
+          xorg.libSM
+          xorg.libICE
+          xorg.xcbutilwm
+          xorg.xcbutilimage
+          xorg.xcbutilkeysyms
+          xorg.xcbutilrenderutil
+          xorg.libxcb
+          libxkbcommon
+          fontconfig
+          freetype
+          libGL
+          libxkbcommon
+          dbus
+          harfbuzz
+          zlib
+          zstd
+          glib
+          libgcc
+        ];
+
+      extraInstallCommands = ''
+        mkdir -p "$out/share/applications"
+        cp "${desktopItem}/share/applications/${pname}.desktop" "$out/share/applications/${pname}.desktop"
+      '';
+
+      meta = spplice.meta;
+    };
+
+  # Why do I gotta make my own thing? .override doesn't work!?
+  makeOverridable = f: origArgs:
+    let origRes = f origArgs;
+    in origRes // { overrideVersion = newArgs: (f (origArgs // newArgs)); };
+in makeOverridable mkSppliceFHS (import ./version.nix)

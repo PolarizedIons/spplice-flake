@@ -10,12 +10,11 @@ let
 in {
   options.programs.spplice = {
     enable = mkEnableOption "Enable Spplice";
-    # Once it's open sourced, we can download previous versions.
-    # version = mkOption {
-    #   type = types.str;
-    #   default = defaultVersion.version;
-    #   description = "Version of the Spplice to build/install";
-    # };
+    version = mkOption {
+      type = types.str;
+      default = defaultVersion.version;
+      description = "Version of the Spplice to install";
+    };
     sha256 = mkOption {
       type = types.str;
       default = defaultVersion.sha256;

@@ -21,9 +21,9 @@ let
       nativeBuildInputs = [ autoPatchelfHook copyDesktopItems ];
 
       installPhase = ''
-        mkdir -p $out/bin/${pname}
-        cp $src $out/bin/${pname}/${pname}
-        chmod +x $out/bin/${pname}/${pname}
+        mkdir -p $out/bin
+        cp $src $out/bin/${pname}
+        chmod +x $out/bin/${pname}
 
         mkdir -p $out/usr/share/pixmaps
         cp ${icon} $out/usr/share/pixmaps/${pname}.png
@@ -55,7 +55,7 @@ let
 
       targetPkgs = _: [ spplice ];
 
-      runScript = "/bin/${pname}/${pname}";
+      runScript = "/bin/${pname}";
 
       multiPkgs = _:
         with pkgs; [

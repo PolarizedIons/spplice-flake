@@ -40,7 +40,7 @@ let
     (makeDesktopItem {
       name = pname;
       desktopName = "Spplice";
-      exec = "${spplice}/bin/${pname} %u";
+      exec = "${spplice.name} %u";
       icon = "${spplice}/usr/share/pixmaps/${pname}.png";
       categories = [ "Game" ];
     });

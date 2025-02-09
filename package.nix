@@ -80,6 +80,9 @@ let
           zstd
           glib
           libgcc
+          nghttp2.lib
+          libidn2
+          openssl
         ];
 
       extraInstallCommands = ''

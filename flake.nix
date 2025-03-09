@@ -17,5 +17,8 @@
           default = spplice;
           spplice = import ./module.nix { inherit inputs system; };
         };
+
+        devShells.default =
+          pkgs.mkShell { buildInputs = [ self.packages.${system}.default ]; };
       });
 }
